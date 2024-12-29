@@ -46,32 +46,54 @@ class AuthController extends BaseController
     }
 
     /**
-     * Login user
+     * Get authenticated user information
      *
-     * @param  LoginRequest  $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function me(): JsonResponse
     {
-        $user = auth()->user();
+        $user = Auth::user();
+
+        if (!$user) {
+            return $this->sendError('Unauthorized.', ['error' => 'User not authenticated'], 401);
+        }
+
         return $this->sendResponse($user, 'Authenticated user info.');
     }
 
     /**
-     * refresh token
+     * Refresh the access token using a refresh token
      *
-     * @return void
+     * @param RefreshTokenRequest $request
+     * @return JsonResponse
      */
     public function refreshToken(RefreshTokenRequest $request): JsonResponse
     {
-        $response = Http::asForm()->post(env('APP_URL') . '/oauth/token', [
-            'grant_type' => 'refresh_token',
-            'refresh_token' => $request->refresh_token,
-            'client_id' => env('PASSPORT_PASSWORD_CLIENT_ID'),
-            'client_secret' => env('PASSPORT_PASSWORD_SECRET'),
-            'scope' => '',
-        ]);
+        try {
+            $response = Http::asForm()->post(config('app.url') . '/oauth/token', [
+                'grant_type' => 'refresh_token',
+                'refresh_token' => $request->refresh_token,
+                'client_id' => config('passport.password_client_id'),
+                'client_secret' => config('passport.password_client_secret'),
+                'scope' => '',
+            ]);
 
-        return $this->sendResponse($response->json(), 'Token refreshed successfully.');
+            if ($response->failed()) {
+                return $this->sendError(
+                    'Token refresh failed',
+                    ['error' => $response->json()['message'] ?? 'Invalid refresh token'],
+                    $response->status()
+                );
+            }
+
+            return $this->sendResponse($response->json(), 'Token refreshed successfully.');
+        } catch (\Exception $e) {
+            return $this->sendError(
+                'Token refresh failed',
+                ['error' => 'An unexpected error occurred'],
+                500
+            );
+        }
     }
 
     /**
