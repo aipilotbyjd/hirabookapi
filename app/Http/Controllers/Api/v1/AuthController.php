@@ -33,35 +33,16 @@ class AuthController extends BaseController
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
-            $user = Auth::user();
-
-            $response = Http::post(env('APP_URL') . '/oauth/token', [
-                'grant_type' => 'password',
-                'client_id' => env('PASSPORT_PASSWORD_CLIENT_ID'),
-                'client_secret' => env('PASSPORT_PASSWORD_SECRET'),
-                'username' => $request->email,
-                'password' => $request->password,
-                'scope' => '',
-            ]);
-
-            $user['token'] = $response->json();
-
-            return response()->json([
-                'success' => true,
-                'statusCode' => 200,
-                'message' => 'User has been logged successfully.',
-                'data' => $user,
-            ], 200);
-        } else {
-            return response()->json([
-                'success' => true,
-                'statusCode' => 401,
-                'message' => 'Unauthorized.',
-                'errors' => 'Unauthorized',
-            ], 401);
+        if (!Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+            return $this->sendError('Unauthorized.', ['error' => 'Invalid credentials'], 401);
         }
 
+        //get user by email
+        $success['user'] = User::where('email', $request->email)->first();
+
+        $success['token'] = $success['user']->createToken('hirabookapi')->accessToken;
+
+        return $this->sendResponse($success, 'User has been logged in successfully.');
     }
 
     /**
@@ -71,15 +52,8 @@ class AuthController extends BaseController
      */
     public function me(): JsonResponse
     {
-
         $user = auth()->user();
-
-        return response()->json([
-            'success' => true,
-            'statusCode' => 200,
-            'message' => 'Authenticated use info.',
-            'data' => $user,
-        ], 200);
+        return $this->sendResponse($user, 'Authenticated user info.');
     }
 
     /**
@@ -97,12 +71,7 @@ class AuthController extends BaseController
             'scope' => '',
         ]);
 
-        return response()->json([
-            'success' => true,
-            'statusCode' => 200,
-            'message' => 'Refreshed token.',
-            'data' => $response->json(),
-        ], 200);
+        return $this->sendResponse($response->json(), 'Token refreshed successfully.');
     }
 
     /**
@@ -111,11 +80,6 @@ class AuthController extends BaseController
     public function logout(): JsonResponse
     {
         Auth::user()->tokens()->delete();
-
-        return response()->json([
-            'success' => true,
-            'statusCode' => 204,
-            'message' => 'Logged out successfully.',
-        ], 204);
+        return $this->sendResponse([], 'Logged out successfully.');
     }
 }
