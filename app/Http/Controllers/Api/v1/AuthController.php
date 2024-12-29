@@ -1,17 +1,17 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Api\V1;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\LoginRequest;
-use App\Http\Requests\RefreshTokenRequest;
-use App\Http\Requests\RegisterRequest;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use App\Http\Requests\LoginRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
+use App\Http\Requests\RegisterRequest;
+use App\Http\Requests\RefreshTokenRequest;
+use App\Http\Controllers\Api\V1\BaseController as BaseController;
 
-class AuthController extends Controller
+class AuthController extends BaseController
 {
     /**
      * User registration
@@ -23,23 +23,9 @@ class AuthController extends Controller
         $userData['email_verified_at'] = now();
         $user = User::create($userData);
 
-        $response = Http::post(env('APP_URL') . '/oauth/token', [
-            'grant_type' => 'password',
-            'client_id' => env('PASSPORT_PASSWORD_CLIENT_ID'),
-            'client_secret' => env('PASSPORT_PASSWORD_SECRET'),
-            'username' => $userData['email'],
-            'password' => $userData['password'],
-            'scope' => '',
-        ]);
+        $success['token'] = $user->createToken('hirabookapi')->accessToken;
 
-        $user['token'] = $response->json();
-
-        return response()->json([
-            'success' => true,
-            'statusCode' => 201,
-            'message' => 'User has been registered successfully.',
-            'data' => $user,
-        ], 201);
+        return $this->sendResponse($success, 'User has been registered successfully.');
     }
 
     /**
