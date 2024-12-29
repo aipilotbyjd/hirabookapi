@@ -38,9 +38,9 @@ class AuthController extends BaseController
         }
 
         //get user by email
-        $success['user'] = User::where('email', $request->email)->first();
+        $success = User::where('email', $request->email)->first();
 
-        $success['token'] = $success['user']->createToken('hirabookapi')->accessToken;
+        $success['token'] = $success->createToken('hirabookapi')->accessToken;
 
         return $this->sendResponse($success, 'User has been logged in successfully.');
     }
