@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
+
 class Work extends Model
 {
     use SoftDeletes;
@@ -25,7 +27,8 @@ class Work extends Model
     }
     public static function getTotalWorks($filter)
     {
-        $query = self::where('works.is_active', '1');
+        $user = Auth::user();
+        $query = self::where('works.is_active', '1')->where('works.user_id', $user->id);
 
         switch ($filter) {
             case 'today':

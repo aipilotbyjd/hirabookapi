@@ -45,7 +45,7 @@ class WorkController extends BaseController
             }
 
             $works = $query->latest()->paginate($perPage);
-            $total = Work::where('user_id', $user->id)->getTotalWorks($filter);
+            $total = Work::getTotalWorks($filter);
 
             return $this->sendResponse([
                 'works' => $works,
