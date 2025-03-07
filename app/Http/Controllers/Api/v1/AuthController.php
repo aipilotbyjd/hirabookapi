@@ -399,6 +399,7 @@ class AuthController extends BaseController
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'profile_image' => $user->profile_image,
+                'address' => $user->address,
             ];
 
             return $this->sendResponse($userData, 'Profile updated successfully');
