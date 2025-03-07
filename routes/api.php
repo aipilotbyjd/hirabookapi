@@ -12,11 +12,11 @@ Route::prefix('v1')->group(function () {
     //auth routes
     Route::post('login', [AuthController::class, 'login'])->name('login');
     Route::post('register', [AuthController::class, 'register'])->name('register');
-    Route::post('phone-login', [AuthController::class, 'phoneLogin'])->name('phone-login');
-    Route::post('verify-otp', [AuthController::class, 'verifyOtp'])->name('verify-otp');
+    // Route::post('phone-login', [AuthController::class, 'phoneLogin'])->name('phone-login');
+    // Route::post('verify-otp', [AuthController::class, 'verifyOtp'])->name('verify-otp');
     Route::post('forgot-password', [AuthController::class, 'forgotPassword'])->name('forgot-password');
     Route::post('reset-password', [AuthController::class, 'resetPassword'])->name('reset-password');
-    Route::post('google-login', [AuthController::class, 'googleLogin'])->name('google-login');
+    // Route::post('google-login', [AuthController::class, 'googleLogin'])->name('google-login');
 
     //get all settings
     Route::get('settings', [HomeController::class, 'settings'])->name('settings');
@@ -40,14 +40,14 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{id}', [WorkController::class, 'destroy'])->name('works.destroy');
         });
 
-        //work item routes
-        Route::prefix('work-items')->group(function () {
-            Route::get('/', [WorkItemController::class, 'index'])->name('work-items.index');
-            Route::post('/', [WorkItemController::class, 'store'])->name('work-items.store');
-            Route::get('/{id}', [WorkItemController::class, 'details'])->name('work-items.details');
-            Route::put('/{id}', [WorkItemController::class, 'update'])->name('work-items.update');
-            Route::delete('/{id}', [WorkItemController::class, 'destroy'])->name('work-items.destroy');
-        });
+        // //work item routes
+        // Route::prefix('work-items')->group(function () {
+        //     Route::get('/', [WorkItemController::class, 'index'])->name('work-items.index');
+        //     Route::post('/', [WorkItemController::class, 'store'])->name('work-items.store');
+        //     Route::get('/{id}', [WorkItemController::class, 'details'])->name('work-items.details');
+        //     Route::put('/{id}', [WorkItemController::class, 'update'])->name('work-items.update');
+        //     Route::delete('/{id}', [WorkItemController::class, 'destroy'])->name('work-items.destroy');
+        // });
 
         //payment routes
         Route::prefix('payments')->group(function () {
