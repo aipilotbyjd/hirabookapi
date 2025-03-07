@@ -30,7 +30,7 @@ class PaymentRequest extends FormRequest
             'source_id' => 'required|exists:payment_sources,id',
             'date' => 'required|date',
             'work_id' => 'nullable|exists:works,id',
-            'user_id' => 'nullable|exists:users,id',
+            'user_id' => 'required|exists:users,id',
             'is_active' => 'nullable|in:0,1'
         ];
     }
