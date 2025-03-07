@@ -357,7 +357,7 @@ class AuthController extends BaseController
                 'email' => 'sometimes|email|unique:users,email,' . Auth::id(),
                 'phone' => 'sometimes|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:users,phone,' . Auth::id(),
                 'address' => 'sometimes|string|max:500',
-                'profile_image' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'profile_image' => $request->hasFile('profile_image') ? 'image|mimes:jpeg,png,jpg,gif|max:2048' : '',
             ]);
 
             if ($validator->fails()) {
