@@ -8,6 +8,7 @@ use App\Http\Controllers\BaseController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Auth;
 
 class WorkController extends BaseController
 {
@@ -18,13 +19,12 @@ class WorkController extends BaseController
     {
         try {
             $perPage = $request->input('per_page', 10);
-            $query = Work::query()->with(['workItems']);
-            $filter = $request->input('filter', 'all');
+            $user = Auth::user();
+            $query = Work::query()
+                ->with(['workItems'])
+                ->where('user_id', $user->id);
 
-            // Apply filters if provided
-            if ($request->has('user_id')) {
-                $query->where('user_id', $request->input('user_id'));
-            }
+            $filter = $request->input('filter', 'all');
 
             if ($request->has('is_active')) {
                 $query->where('is_active', $request->input('is_active'));
@@ -45,8 +45,7 @@ class WorkController extends BaseController
             }
 
             $works = $query->latest()->paginate($perPage);
-
-            $total = Work::getTotalWorks($filter);
+            $total = Work::where('user_id', $user->id)->getTotalWorks($filter);
 
             return $this->sendResponse([
                 'works' => $works,
@@ -64,12 +63,17 @@ class WorkController extends BaseController
     public function store(WorkRequest $request): JsonResponse
     {
         try {
-            $work = Work::create($request->validated());
+            $user = Auth::user();
+            $validated = $request->validated();
+            $validated['user_id'] = $user->id;
+
+            $work = Work::create($validated);
             $work->workItems()->createMany($request->entries);
             $work->total = $work->workItems->sum(function ($item) {
                 return $item->price * $item->diamond;
             });
             $work->save();
+
             return $this->sendResponse($work->load(['workItems']), 'Work created successfully');
         } catch (\Exception $e) {
             logError('WorkController', 'store', $e->getMessage());
@@ -83,7 +87,11 @@ class WorkController extends BaseController
     public function details($id): JsonResponse
     {
         try {
-            $work = Work::with(['workItems'])->findOrFail($id);
+            $user = Auth::user();
+            $work = Work::with(['workItems'])
+                ->where('user_id', $user->id)
+                ->findOrFail($id);
+
             return $this->sendResponse($work, 'Work fetched successfully');
         } catch (ModelNotFoundException $e) {
             return $this->sendError('Work not found', [], 404);
@@ -99,14 +107,18 @@ class WorkController extends BaseController
     public function update(WorkRequest $request, $id): JsonResponse
     {
         try {
-            $work = Work::findOrFail($id);
-            $work->update($request->validated());
+            $user = Auth::user();
+            $work = Work::where('user_id', $user->id)->findOrFail($id);
+
+            $validated = $request->validated();
+            $work->update($validated);
             $work->workItems()->delete();
             $work->workItems()->createMany($request->entries);
             $work->total = $work->workItems->sum(function ($item) {
                 return $item->price * $item->diamond;
             });
             $work->save();
+
             return $this->sendResponse($work->load(['workItems']), 'Work updated successfully');
         } catch (ModelNotFoundException $e) {
             return $this->sendError('Work not found', [], 404);
@@ -122,13 +134,12 @@ class WorkController extends BaseController
     public function destroy($id): JsonResponse
     {
         try {
-            $work = Work::findOrFail($id);
-            // Delete child records first to avoid foreign key constraint violation
+            $user = Auth::user();
+            $work = Work::where('user_id', $user->id)->findOrFail($id);
             $work->workItems()->delete();
-            if ($work->delete()) {
-                return $this->sendResponse([], 'Work deleted successfully');
-            }
-            return $this->sendError('Failed to delete work', [], 500);
+            $work->delete();
+
+            return $this->sendResponse([], 'Work deleted successfully');
         } catch (ModelNotFoundException $e) {
             return $this->sendError('Work not found', [], 404);
         } catch (\Exception $e) {
