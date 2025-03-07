@@ -352,12 +352,12 @@ class AuthController extends BaseController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'first_name' => 'sometimes|required|string|max:255',
-                'last_name' => 'sometimes|required|string|max:255',
-                'email' => 'sometimes|required|email|unique:users,email,' . Auth::id(),
-                'phone' => 'sometimes|required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:users,phone,' . Auth::id(),
-                'address' => 'sometimes|required|string|max:500',
-                'profile_image' => 'sometimes|required|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'first_name' => 'sometimes|string|max:255',
+                'last_name' => 'sometimes|string|max:255',
+                'email' => 'sometimes|email|unique:users,email,' . Auth::id(),
+                'phone' => 'sometimes|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:users,phone,' . Auth::id(),
+                'address' => 'sometimes|string|max:500',
+                'profile_image' => 'sometimes|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 
             if ($validator->fails()) {
