@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 class Payment extends Model
 {
@@ -22,7 +23,8 @@ class Payment extends Model
 
     public static function getTotalPayments($filter)
     {
-        $query = self::where('is_active', '1');
+        $user = Auth::user();
+        $query = self::where('is_active', '1')->where('user_id', $user->id);
 
         switch ($filter) {
             case 'today':

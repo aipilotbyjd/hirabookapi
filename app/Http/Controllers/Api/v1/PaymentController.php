@@ -49,7 +49,7 @@ class PaymentController extends BaseController
             }
 
             $payments = $query->latest()->paginate($perPage);
-            $total = Payment::where('user_id', $user->id)->getTotalPayments($filter);
+            $total = Payment::getTotalPayments($filter);
 
             return $this->sendResponse([
                 'payments' => $payments,
