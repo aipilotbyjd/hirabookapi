@@ -119,7 +119,17 @@ class AuthController extends BaseController
     {
         try {
             $user = Auth::user();
-            return $this->sendResponse($user, 'User fetched successfully');
+
+            $output = [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'profile_image' => $user->profile_image,
+            ];
+
+            return $this->sendResponse($output, 'User fetched successfully');
         } catch (\Exception $e) {
             logError('AuthController', 'user', $e->getMessage());
             return $this->sendError('Something went wrong', [], 500);
@@ -241,7 +251,21 @@ class AuthController extends BaseController
 
             $user->token = $user->createToken($user->email ?? 'hirabook')->accessToken;
 
-            return $this->sendResponse($user, 'OTP verified successfully');
+            $userData = [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'profile_image' => $user->profile_image,
+            ];
+
+            $output = [
+                'user' => $userData,
+                'token' => $user->token
+            ];
+
+            return $this->sendResponse($output, 'OTP verified successfully');
         } catch (\Exception $e) {
             logError('AuthController', 'verifyOtp', $e->getMessage());
             return $this->sendError('Something went wrong', [], 500);
@@ -368,7 +392,16 @@ class AuthController extends BaseController
 
             $user->save();
 
-            return $this->sendResponse($user, 'Profile updated successfully');
+            $userData = [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'profile_image' => $user->profile_image,
+            ];
+
+            return $this->sendResponse($userData, 'Profile updated successfully');
         } catch (\Exception $e) {
             logError('AuthController', 'updateProfile', $e->getMessage());
             return $this->sendError('Something went wrong', [], 500);
@@ -379,7 +412,17 @@ class AuthController extends BaseController
     {
         try {
             $user = Auth::user();
-            return $this->sendResponse($user, 'Profile fetched successfully');
+
+            $output = [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'profile_image' => $user->profile_image,
+            ];
+
+            return $this->sendResponse($output, 'Profile fetched successfully');
         } catch (\Exception $e) {
             logError('AuthController', 'profile', $e->getMessage());
             return $this->sendError('Something went wrong', [], 500);
@@ -453,7 +496,16 @@ class AuthController extends BaseController
     {
         try {
             $user = Auth::user();
-            return $this->sendResponse($user, 'Token verified successfully');
+            $userData = [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'profile_image' => $user->profile_image,
+            ];
+
+            return $this->sendResponse($userData, 'Token verified successfully');
         } catch (\Exception $e) {
             logError('AuthController', 'verifyToken', $e->getMessage());
             return $this->sendError('Something went wrong', [], 500);

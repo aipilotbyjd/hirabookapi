@@ -36,7 +36,7 @@ class Payment extends Model
                 $query->whereBetween('date', [date('Y-m-d', strtotime('last Monday')), date('Y-m-d', strtotime('next Sunday'))]);
                 break;
             case 'month':
-                $query->whereMonth('date', date('m'));
+                $query->whereMonth('date', date('m'))->whereYear('date', date('Y'));
                 break;
             default:
                 break;
