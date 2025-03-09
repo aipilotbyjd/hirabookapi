@@ -7,7 +7,7 @@ use App\Models\PaymentSource;
 use App\Models\Notification;
 use App\Models\Payment;
 use App\Models\Work;
-
+use Illuminate\Support\Facades\Auth;
 class HomeController extends BaseController
 {
     public function settings()
@@ -40,6 +40,10 @@ class HomeController extends BaseController
         try {
             $perPage = request()->query('per_page', 10);
             $notifications = Notification::select('id', 'title', 'description', 'image', 'is_read', 'link', 'link_text', 'link_icon', 'link_color', 'created_at')
+                ->where(function ($query) {
+                    $query->where('receiver_id', Auth::user()->id)
+                        ->orWhereNull('receiver_id');
+                })
                 ->latest()
                 ->paginate($perPage);
 
@@ -152,7 +156,7 @@ class HomeController extends BaseController
             $weeklyWorkAmount = Work::getTotalWorkAmount('week');
             $monthlyWorkAmount = Work::getTotalWorkAmount('month');
 
-            // Get payments stats with single query  
+            // Get payments stats with single query
             $paymentsStats = Payment::selectRaw('
                 COUNT(*) as total_payments,
                 COUNT(CASE WHEN DATE(created_at) = CURDATE() THEN 1 END) as today_payments,

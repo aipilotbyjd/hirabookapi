@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::table('notifications', function (Blueprint $table) {
             $table->string('sender_id')->nullable()->after('id');
             $table->string('receiver_id')->nullable()->after('sender_id');
-            $table->string('type')->nullable()->comment('like, comment, follow, message, post, comment_reply, like_reply')->after('receiver_id');
+            $table->string('type')->nullable()->comment('like, comment, follow, message, post, comment_reply, like_reply, announcement')->after('receiver_id');
         });
     }
 
