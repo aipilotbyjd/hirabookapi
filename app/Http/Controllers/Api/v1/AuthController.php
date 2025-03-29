@@ -442,38 +442,53 @@ class AuthController extends BaseController
                 return $this->sendError('Validation Error.', $validator->errors(), 422);
             }
 
-            $accessToken = $request->id_token;
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $accessToken
-            ])->get('https://www.googleapis.com/oauth2/v3/userinfo');
+            $idToken = $request->id_token;
 
-            if (!$response->successful()) {
+            // Step 1: Verify the token with Google's tokeninfo endpoint
+            $verifyResponse = Http::get('https://oauth2.googleapis.com/tokeninfo', [
+                'id_token' => $idToken
+            ]);
+
+            if (!$verifyResponse->successful()) {
                 return $this->sendError('Invalid Google token', [], 401);
             }
 
-            $googleUser = $response->json();
+            $tokenInfo = $verifyResponse->json();
 
-            if (!isset($googleUser['email'])) {
+            // Step 2: Validate token claims
+            // Check if token is expired
+            if (isset($tokenInfo['exp']) && $tokenInfo['exp'] < time()) {
+                return $this->sendError('Token has expired', [], 401);
+            }
+
+            // Optional: Verify your app's client ID (if you want to ensure the token was issued for your application)
+            // if ($tokenInfo['aud'] !== env('GOOGLE_CLIENT_ID')) {
+            //    return $this->sendError('Invalid audience for token', [], 401);
+            // }
+
+            // Step 3: Use the verified user information
+            if (!isset($tokenInfo['email'])) {
                 return $this->sendError('Email not available in Google user data', [], 400);
             }
 
-            $user = User::where('email', $googleUser['email'])->first();
+            // Find or create user based on email
+            $user = User::where('email', $tokenInfo['email'])->first();
 
             if (!$user) {
                 // Create new user
                 $user = User::create([
-                    'email' => $googleUser['email'],
-                    'first_name' => $googleUser['given_name'] ?? '',
-                    'last_name' => $googleUser['family_name'] ?? '',
-                    'profile_image' => $googleUser['picture'] ?? null,
-                    'google_id' => $googleUser['sub'] ?? null,
+                    'email' => $tokenInfo['email'],
+                    'first_name' => $tokenInfo['given_name'] ?? '',
+                    'last_name' => $tokenInfo['family_name'] ?? '',
+                    'profile_image' => $tokenInfo['picture'] ?? null,
+                    'google_id' => $tokenInfo['sub'] ?? null,
                     'password' => Hash::make(Str::random(16))
                 ]);
             } else {
                 // Update existing user
-                $user->google_id = $googleUser['sub'] ?? $googleUser['id'];
-                if (empty($user->profile_image) && isset($googleUser['picture'])) {
-                    $user->profile_image = $googleUser['picture'];
+                $user->google_id = $tokenInfo['sub'];
+                if (empty($user->profile_image) && isset($tokenInfo['picture'])) {
+                    $user->profile_image = $tokenInfo['picture'];
                 }
                 $user->save();
             }
