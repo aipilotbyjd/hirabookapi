@@ -453,8 +453,6 @@ class AuthController extends BaseController
                 return $this->sendError('Invalid Google token', [], 401);
             }
 
-            $googleUser = $response->json();
-
             if (!isset($googleUser['email'])) {
                 return $this->sendError('Email not available in Google user data', [], 400);
             }
