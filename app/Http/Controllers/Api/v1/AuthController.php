@@ -447,6 +447,8 @@ class AuthController extends BaseController
                 'Authorization' => 'Bearer ' . $accessToken
             ])->get('https://www.googleapis.com/oauth2/v3/userinfo');
 
+            return $this->sendResponse($response->json(), 'Google user info');
+
             if (!$response->successful()) {
                 return $this->sendError('Invalid Google token', [], 401);
             }
