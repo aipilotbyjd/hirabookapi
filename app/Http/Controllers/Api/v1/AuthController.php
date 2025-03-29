@@ -435,14 +435,14 @@ class AuthController extends BaseController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'accessToken' => 'required|string'
+                'id_token' => 'required|string'
             ]);
 
             if ($validator->fails()) {
                 return $this->sendError('Validation Error.', $validator->errors(), 422);
             }
 
-            $accessToken = $request->accessToken;
+            $accessToken = $request->id_token;
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $accessToken
             ])->get('https://www.googleapis.com/oauth2/v3/userinfo');
@@ -460,6 +460,7 @@ class AuthController extends BaseController
             $user = User::where('email', $googleUser['email'])->first();
 
             if (!$user) {
+                // Create new user
                 $user = User::create([
                     'email' => $googleUser['email'],
                     'first_name' => $googleUser['given_name'] ?? '',
@@ -469,6 +470,7 @@ class AuthController extends BaseController
                     'password' => Hash::make(Str::random(16))
                 ]);
             } else {
+                // Update existing user
                 $user->google_id = $googleUser['sub'] ?? $googleUser['id'];
                 if (empty($user->profile_image) && isset($googleUser['picture'])) {
                     $user->profile_image = $googleUser['picture'];
@@ -476,16 +478,22 @@ class AuthController extends BaseController
                 $user->save();
             }
 
-            $tokenResult = $user->createToken('GoogleToken');
-            $token = $tokenResult->accessToken;
-            $tokenResult->token->save();
+            $token = $user->createToken($user->email ?? 'hirabook')->accessToken;
 
-            $success['first_name'] = $user->first_name;
-            $success['last_name'] = $user->last_name;
-            $success['email'] = $user->email;
-            $success['profile_image'] = $user->profile_image;
-            $success['token'] = $token;
-            $success['expires_at'] = $tokenResult->token->expires_at;
+            // Format user data consistent with other auth methods
+            $userData = [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'profile_image' => $user->profile_image,
+            ];
+
+            $success = [
+                'user' => $userData,
+                'token' => $token
+            ];
 
             return $this->sendResponse($success, 'Google login successful');
         } catch (\Exception $e) {
