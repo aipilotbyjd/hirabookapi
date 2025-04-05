@@ -48,7 +48,7 @@ class Work extends Model
 
     public static function getTotalWorkAmount($filter)
     {
-        $query = self::where('is_active', '1');
+        $query = self::where('is_active', '1')->where('user_id', Auth::id());
 
         switch ($filter) {
             case 'today':

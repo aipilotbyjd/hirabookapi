@@ -57,7 +57,15 @@ class HomeController extends BaseController
     public function readNotification($id, $isRead = true)
     {
         try {
-            $notification = Notification::findOrFail($id);
+            $notification = Notification::where('id', $id)->where(function ($query) {
+                $query->where('receiver_id', Auth::user()->id)
+                    ->orWhereNull('receiver_id');
+            })->first();
+
+            if (!$notification) {
+                return $this->sendError('Notification not found', [], 404);
+            }
+
             $notification->is_read = $isRead == 'true' ? true : false;
             $notification->save();
             return $this->sendResponse($notification, 'Notification read successfully');
@@ -70,7 +78,10 @@ class HomeController extends BaseController
     public function readAllNotifications()
     {
         try {
-            Notification::where('is_read', false)->update(['is_read' => true]);
+            Notification::where(function ($query) {
+                $query->where('receiver_id', Auth::user()->id)
+                    ->orWhereNull('receiver_id');
+            })->where('is_read', false)->update(['is_read' => true]);
             return $this->sendResponse([], 'All notifications read successfully');
         } catch (\Exception $e) {
             logError('HomeController', 'readAllNotifications', $e->getMessage());
@@ -81,7 +92,11 @@ class HomeController extends BaseController
     public function unreadNotificationsCount()
     {
         try {
-            $count = Notification::unread()->count();
+            $count = Notification::where(function ($query) {
+                $query->where('receiver_id', Auth::user()->id)
+                    ->orWhereNull('receiver_id');
+            })->unread()->count();
+
             return $this->sendResponse($count, 'Unread notifications count fetched successfully');
         } catch (\Exception $e) {
             logError('HomeController', 'unreadNotificationsCount', $e->getMessage());
@@ -94,6 +109,7 @@ class HomeController extends BaseController
         try {
             // Get recent works with their items
             $works = Work::with('workItems')
+                ->where('user_id', Auth::id())
                 ->latest()
                 ->take(10)
                 ->get()
@@ -111,6 +127,7 @@ class HomeController extends BaseController
 
             // Get recent payments
             $payments = Payment::latest()
+                ->where('user_id', Auth::id())
                 ->take(10)
                 ->get()
                 ->map(function ($payment) {
@@ -148,6 +165,7 @@ class HomeController extends BaseController
                 COUNT(CASE WHEN created_at BETWEEN ? AND ? THEN 1 END) as weekly_works,
                 COUNT(CASE WHEN MONTH(created_at) = MONTH(CURDATE()) THEN 1 END) as monthly_works
             ', [now()->startOfWeek(), now()->endOfWeek()])
+                ->where('user_id', Auth::id())
                 ->first();
 
             // Get total work amount
@@ -172,6 +190,7 @@ class HomeController extends BaseController
                 now()->startOfWeek(),
                 now()->endOfWeek()
             ])
+                ->where('user_id', Auth::id())
                 ->first();
 
             $status = [
