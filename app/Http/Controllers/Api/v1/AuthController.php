@@ -379,7 +379,7 @@ class AuthController extends BaseController
                 $user->address = $request->address;
 
             //log image
-            Log::info($request->profile_image);
+            Log::info($request->profile_image . $request->hasFile('profile_image'));
 
             if ($request->hasFile('profile_image')) {
                 // Delete old image if exists
