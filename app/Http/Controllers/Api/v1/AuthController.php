@@ -352,12 +352,12 @@ class AuthController extends BaseController
     {
         try {
             $validator = Validator::make($request->all(), [
-                'first_name' => $request->has('first_name') ? 'required|string|max:255|regex:/^[a-zA-Z\s]+$/' : '',
-                'last_name' => $request->has('last_name') ? 'required|string|max:255|regex:/^[a-zA-Z\s]+$/' : '',
-                'email' => $request->has('email') ? 'required|email|max:255|unique:users,email,' . Auth::id() : '',
-                'phone' => $request->has('phone') ? 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:15|unique:users,phone,' . Auth::id() : '',
-                'address' => $request->has('address') ? 'required|string|min:5|max:500' : '',
-                'profile_image' => $request->hssasFile('profile_image') ? 'required|image|mimes:jpeg,png,jpg,gif|max:2048|dimensions:min_width=100,min_height=100' : '',
+                'first_name' => $request->has('first_name') ? 'nullable|string|max:255|regex:/^[a-zA-Z\s]+$/' : '',
+                'last_name' => $request->has('last_name') ? 'nullable|string|max:255|regex:/^[a-zA-Z\s]+$/' : '',
+                'email' => $request->has('email') ? 'nullable|email|max:255|unique:users,email,' . Auth::id() : '',
+                'phone' => $request->has('phone') ? 'nullable|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:15|unique:users,phone,' . Auth::id() : '',
+                'address' => $request->has('address') ? 'nullable|string|min:5|max:500' : '',
+                'profile_image' => $request->hasFile('profile_image') ? 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048|dimensions:min_width=100,min_height=100' : '',
             ]);
 
             if ($validator->fails()) {
