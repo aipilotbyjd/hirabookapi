@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class PaymentSource extends Model
 {
     use SoftDeletes;
-    protected $fillable = ['name', 'icon', 'is_active'];
+    protected $fillable = ['name', 'name_en', 'name_gu', 'name_hi', 'icon', 'is_active'];
 
     public function payments()
     {
