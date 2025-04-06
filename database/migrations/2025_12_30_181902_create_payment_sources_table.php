@@ -12,7 +12,8 @@ return new class extends Migration {
     {
         Schema::create('payment_sources', function (Blueprint $table) {
             $table->id();
-            $table->string('name_en');
+            $table->string('name')->nullable();
+            $table->string('name_en')->nullable();
             $table->string('name_gu')->nullable();
             $table->string('name_hi')->nullable();
             $table->string('icon')->nullable();
