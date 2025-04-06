@@ -14,12 +14,12 @@ class PaymentSourceSeeder extends Seeder
     public function run(): void
     {
         $paymentSources = [
-            ['name_en' => 'Cash', 'name_gu' => 'Cash', 'name_hi' => 'Cash', 'icon' => 'cash'],
-            ['name_en' => 'Bank Transfer', 'name_gu' => 'Bank Transfer', 'name_hi' => 'Bank Transfer', 'icon' => 'bank-transfer-in'],
-            ['name_en' => 'UPI', 'name_gu' => 'UPI', 'name_hi' => 'UPI', 'icon' => 'qrcode'],
-            ['name_en' => 'Cheque', 'name_gu' => 'Cheque', 'name_hi' => 'Cheque', 'icon' => 'file-document-outline'],
-            ['name_en' => 'Card', 'name_gu' => 'Card', 'name_hi' => 'Card', 'icon' => 'credit-card'],
-            ['name_en' => 'Other', 'name_gu' => 'Other', 'name_hi' => 'Other', 'icon' => 'dots-horizontal'],
+            ['name_en' => 'Cash', 'name_gu' => 'રોકડ', 'name_hi' => 'नकद', 'icon' => 'cash'],
+            ['name_en' => 'Bank Transfer', 'name_gu' => 'બેંક ટ્રાન્સફર', 'name_hi' => 'बैंक ट्रांसफर', 'icon' => 'bank-transfer-in'],
+            ['name_en' => 'UPI', 'name_gu' => 'યુપીઆઈ', 'name_hi' => 'यूपीआई', 'icon' => 'qrcode'],
+            ['name_en' => 'Cheque', 'name_gu' => 'ચેક', 'name_hi' => 'चेक', 'icon' => 'file-document-outline'],
+            ['name_en' => 'Card', 'name_gu' => 'કાર્ડ', 'name_hi' => 'कार्ड', 'icon' => 'credit-card'],
+            ['name_en' => 'Other', 'name_gu' => 'અન્ય', 'name_hi' => 'अन्य', 'icon' => 'dots-horizontal'],
         ];
 
         foreach ($paymentSources as $paymentSource) {
