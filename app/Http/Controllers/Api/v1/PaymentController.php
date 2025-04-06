@@ -143,7 +143,7 @@ class PaymentController extends BaseController
     public function paymentSources(): JsonResponse
     {
         try {
-            $paymentSources = PaymentSource::select('id', 'name', 'icon')->get();
+            $paymentSources = PaymentSource::select('id', 'name', 'name_en', 'name_gu', 'name_hi', 'icon')->get();
             return $this->sendResponse($paymentSources, 'Payment sources retrieved successfully');
         } catch (\Exception $e) {
             logError('PaymentController', 'paymentSources', $e->getMessage());

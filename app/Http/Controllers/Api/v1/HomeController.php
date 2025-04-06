@@ -13,7 +13,7 @@ class HomeController extends BaseController
     public function settings()
     {
         try {
-            $paymentSources = PaymentSource::select('id', 'name', 'icon')->get();
+            $paymentSources = PaymentSource::select('id', 'name', 'name_en', 'name_gu', 'name_hi', 'icon')->get();
 
             $settings = [
                 'app_name' => 'Hirabook',
