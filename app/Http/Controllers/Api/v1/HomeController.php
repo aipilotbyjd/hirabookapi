@@ -39,7 +39,7 @@ class HomeController extends BaseController
     {
         try {
             $perPage = request()->query('per_page', 10);
-            $notifications = Notification::select('id', 'receiver_id','title', 'description', 'image', 'is_read', 'link', 'link_text', 'link_icon', 'link_color', 'created_at')
+            $notifications = Notification::select('id', 'receiver_id', 'title', 'description', 'image', 'is_read', 'link', 'link_text', 'link_icon', 'link_color', 'created_at')
                 ->where(function ($query) {
                     $query->where('receiver_id', Auth::user()->id)
                         ->orWhereNull('receiver_id');
@@ -93,9 +93,11 @@ class HomeController extends BaseController
     {
         try {
             $count = Notification::where(function ($query) {
-                $query->where('receiver_id', Auth::user()->id)
-                    ->orWhereNull('receiver_id');
-            })->unread()->count();
+                $query->where(function ($query) {
+                    $query->where('receiver_id', Auth::user()->id)
+                        ->unread();
+                })->orWhereNull('receiver_id');
+            })->count();
 
             return $this->sendResponse($count, 'Unread notifications count fetched successfully');
         } catch (\Exception $e) {
