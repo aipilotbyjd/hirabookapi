@@ -19,12 +19,12 @@ class HomeController extends BaseController
                 'app_name' => 'Hirabook',
                 'app_logo' => 'https://hirabook.com/logo.png',
                 'app_icon' => 'https://hirabook.com/icon.png',
-                'app_description' => 'Hirabook is a platform for booking services',
+                'app_description' => 'Hirabook is a platform for hira workers',
                 'app_version' => '1.0.0',
                 'app_copyright' => 'Hirabook',
                 'app_email' => 'contact@hirabook.icu',
-                'app_address' => 'Addis Ababa, Ethiopia',
-                'app_phone' => '+251912345678',
+                'app_address' => 'Ahemdabad, Gujarat, India',
+                'app_phone' => '',
                 'app_payment_sources' => $paymentSources,
             ];
 
