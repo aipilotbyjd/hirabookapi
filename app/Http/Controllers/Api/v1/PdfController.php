@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Http\Controllers\Api\v1;
@@ -16,8 +15,7 @@ class PdfController extends BaseController
     {
         try {
             $work = Work::with(['workItems', 'user'])->findOrFail($id);
-            $this->authorize('view', $work);
-            
+
             $pdf = PDF::loadView('pdfs.work', ['work' => $work]);
             return $pdf->download("work-{$id}.pdf");
         } catch (\Exception $e) {
@@ -32,7 +30,7 @@ class PdfController extends BaseController
             $works = Work::with(['workItems', 'user'])
                 ->where('user_id', $userId)
                 ->get();
-            
+
             $pdf = PDF::loadView('pdfs.works', ['works' => $works]);
             return $pdf->download("works-{$userId}.pdf");
         } catch (\Exception $e) {
@@ -44,8 +42,7 @@ class PdfController extends BaseController
     {
         try {
             $payment = Payment::with(['user', 'source'])->findOrFail($id);
-            $this->authorize('view', $payment);
-            
+
             $pdf = PDF::loadView('pdfs.payment', ['payment' => $payment]);
             return $pdf->download("payment-{$id}.pdf");
         } catch (\Exception $e) {
@@ -60,7 +57,7 @@ class PdfController extends BaseController
             $payments = Payment::with(['user', 'source'])
                 ->where('user_id', $userId)
                 ->get();
-            
+
             $pdf = PDF::loadView('pdfs.payments', ['payments' => $payments]);
             return $pdf->download("payments-{$userId}.pdf");
         } catch (\Exception $e) {

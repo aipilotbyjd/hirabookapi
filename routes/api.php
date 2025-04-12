@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\v1\HomeController;
 use App\Http\Controllers\Api\v1\WorkController;
 use App\Http\Controllers\Api\v1\WorkItemController;
 use App\Http\Controllers\Api\v1\PaymentController;
+use App\Http\Controllers\Api\v1\PdfController;
 
 //v1 api routes
 Route::prefix('v1')->group(function () {
@@ -24,7 +25,7 @@ Route::prefix('v1')->group(function () {
     //api middleware
     Route::group(['middleware' => 'auth:api'], function () {
         Route::post('verify-token', [AuthController::class, 'verifyToken'])->name('verify-token');
-        
+
         // PDF Export Routes
         Route::get('export/work/{id}', [PdfController::class, 'exportWork']);
         Route::get('export/works/{userId?}', [PdfController::class, 'exportUserWorks']);
