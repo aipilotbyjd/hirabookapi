@@ -24,6 +24,12 @@ Route::prefix('v1')->group(function () {
     //api middleware
     Route::group(['middleware' => 'auth:api'], function () {
         Route::post('verify-token', [AuthController::class, 'verifyToken'])->name('verify-token');
+        
+        // PDF Export Routes
+        Route::get('export/work/{id}', [PdfController::class, 'exportWork']);
+        Route::get('export/works/{userId?}', [PdfController::class, 'exportUserWorks']);
+        Route::get('export/payment/{id}', [PdfController::class, 'exportPayment']);
+        Route::get('export/payments/{userId?}', [PdfController::class, 'exportUserPayments']);
 
         //user routes
         Route::get('user', [AuthController::class, 'user'])->name('user');
