@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\SponsoredAdController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\v1\AuthController;
 use App\Http\Controllers\Api\v1\HomeController;
@@ -81,5 +82,10 @@ Route::prefix('v1')->group(function () {
 
         //get recent status
         Route::get('stats/recent', [HomeController::class, 'getRecentStatus'])->name('stats.recent');
+
+        // Sponsored Ads Routes
+        Route::get('/sponsored-ads', [SponsoredAdController::class, 'index']);
+        Route::post('/sponsored-ads/{sponsoredAd}/impression', [SponsoredAdController::class, 'trackImpression']);
+        Route::post('/sponsored-ads/{sponsoredAd}/click', [SponsoredAdController::class, 'trackClick']);
     });
 });

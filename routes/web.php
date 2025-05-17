@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SponsoredAdController;
 
 Route::get('/', function () {
     $quotes = [
@@ -32,6 +33,9 @@ Route::get('/', function () {
 
     return view('hirabook', ['quote' => $randomQuote]);
 });
+
+// Sponsored Ads
+Route::resource('sponsored-ads', SponsoredAdController::class);
 
 
 // Route::get('/generate', function () {
