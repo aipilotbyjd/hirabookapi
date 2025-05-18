@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
 use App\Models\SponsoredAd;
 use Illuminate\Http\Request;
@@ -18,19 +18,7 @@ class SponsoredAdController extends Controller
     public function index()
     {
         $ads = SponsoredAd::latest()->paginate(10);
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'ads' => $ads,
-                'pagination' => [
-                    'total' => $ads->total(),
-                    'per_page' => $ads->perPage(),
-                    'current_page' => $ads->currentPage(),
-                    'last_page' => $ads->lastPage()
-                ]
-            ]
-        ]);
+        return view('admin.sponsored-ads.index', compact('ads'));
     }
 
     /**
@@ -200,5 +188,3 @@ class SponsoredAdController extends Controller
             ->with('success', 'Sponsored ad deleted successfully.');
     }
 }
-
-

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SponsoredAdController;
+use App\Http\Controllers\Admin\SponsoredAdController as AdminSponsoredAdController;
 
 Route::get('/', function () {
     $quotes = [
@@ -36,6 +37,12 @@ Route::get('/', function () {
 
 // Sponsored Ads
 Route::resource('sponsored-ads', SponsoredAdController::class);
+
+// Admin Routes
+Route::prefix('admin')->name('admin.')->group(function () {
+    // Sponsored Ads Admin Routes
+    Route::resource('sponsored-ads', AdminSponsoredAdController::class);
+});
 
 
 // Route::get('/generate', function () {
