@@ -19,18 +19,7 @@ class SponsoredAdController extends Controller
     {
         $ads = SponsoredAd::latest()->paginate(10);
 
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'ads' => $ads,
-                'pagination' => [
-                    'total' => $ads->total(),
-                    'per_page' => $ads->perPage(),
-                    'current_page' => $ads->currentPage(),
-                    'last_page' => $ads->lastPage()
-                ]
-            ]
-        ]);
+        return view('admin.sponsored-ads.index', compact('ads'));
     }
 
     /**
