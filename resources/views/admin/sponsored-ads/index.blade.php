@@ -26,6 +26,34 @@
     <div class="card">
         <div class="card-header">
             <h5 class="mb-0">Sponsored Advertisements</h5>
+
+            <ul class="nav nav-tabs card-header-tabs mt-3">
+                <li class="nav-item">
+                    <a class="nav-link {{ !$status || $status == 'all' ? 'active' : '' }}" href="{{ route('admin.sponsored-ads.index') }}">
+                        All <span class="badge bg-secondary">{{ $counts['all'] }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ $status == 'active' ? 'active' : '' }}" href="{{ route('admin.sponsored-ads.index', ['status' => 'active']) }}">
+                        Active <span class="badge bg-success">{{ $counts['active'] }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ $status == 'scheduled' ? 'active' : '' }}" href="{{ route('admin.sponsored-ads.index', ['status' => 'scheduled']) }}">
+                        Scheduled <span class="badge bg-info">{{ $counts['scheduled'] }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ $status == 'expired' ? 'active' : '' }}" href="{{ route('admin.sponsored-ads.index', ['status' => 'expired']) }}">
+                        Expired <span class="badge bg-warning text-dark">{{ $counts['expired'] }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ $status == 'inactive' ? 'active' : '' }}" href="{{ route('admin.sponsored-ads.index', ['status' => 'inactive']) }}">
+                        Inactive <span class="badge bg-secondary">{{ $counts['inactive'] }}</span>
+                    </a>
+                </li>
+            </ul>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -160,7 +188,7 @@
             </div>
 
             <div class="d-flex justify-content-center mt-4">
-                {{ $ads->links() }}
+                {{ $ads->appends(['status' => $status])->links() }}
             </div>
         </div>
     </div>

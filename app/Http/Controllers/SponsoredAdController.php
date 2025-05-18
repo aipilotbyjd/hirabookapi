@@ -14,11 +14,37 @@ class SponsoredAdController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $ads = SponsoredAd::latest()->paginate(10);
+        $query = SponsoredAd::query();
 
-        return view('admin.sponsored-ads.index', compact('ads'));
+        // Filter by status if provided
+        $status = $request->input('status');
+        if ($status === 'active') {
+            $query->active();
+        } elseif ($status === 'inactive') {
+            $query->where('is_active', false);
+        } elseif ($status === 'scheduled') {
+            $query->where('is_active', true)
+                ->where('starts_at', '>', now());
+        } elseif ($status === 'expired') {
+            $query->where('is_active', true)
+                ->where('ends_at', '<', now());
+        }
+
+        // Default sorting
+        $ads = $query->latest()->paginate(10);
+
+        // Get counts for the filter tabs
+        $counts = [
+            'all' => SponsoredAd::count(),
+            'active' => SponsoredAd::active()->count(),
+            'inactive' => SponsoredAd::where('is_active', false)->count(),
+            'scheduled' => SponsoredAd::where('is_active', true)->where('starts_at', '>', now())->count(),
+            'expired' => SponsoredAd::where('is_active', true)->where('ends_at', '<', now())->count(),
+        ];
+
+        return view('admin.sponsored-ads.index', compact('ads', 'status', 'counts'));
     }
 
     /**
