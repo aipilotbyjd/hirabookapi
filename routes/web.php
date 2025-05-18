@@ -35,13 +35,9 @@ Route::get('/', function () {
     return view('hirabook', ['quote' => $randomQuote]);
 });
 
-// Sponsored Ads
-Route::resource('sponsored-ads', SponsoredAdController::class);
-
-// Admin Routes
 Route::prefix('admin')->name('admin.')->group(function () {
     // Sponsored Ads Admin Routes
-    Route::resource('sponsored-ads', AdminSponsoredAdController::class);
+    Route::resource('sponsored-ads', SponsoredAdController::class);
 });
 
 
