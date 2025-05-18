@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             PaymentSourceSeeder::class,
             NotificationSeeder::class,
+            SettingsSeeder::class,
         ]);
     }
 }

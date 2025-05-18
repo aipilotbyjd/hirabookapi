@@ -35,9 +35,25 @@ Route::get('/', function () {
     return view('hirabook', ['quote' => $randomQuote]);
 });
 
+// Admin Routes
 Route::prefix('admin')->name('admin.')->group(function () {
-    // Sponsored Ads Admin Routes
-    Route::resource('sponsored-ads', SponsoredAdController::class);
+    // Admin Authentication Routes
+    Route::get('login', [App\Http\Controllers\Admin\AdminController::class, 'showLoginForm'])->name('login');
+    Route::post('login', [App\Http\Controllers\Admin\AdminController::class, 'login'])->name('login.submit');
+    Route::post('logout', [App\Http\Controllers\Admin\AdminController::class, 'logout'])->name('logout');
+
+    // Protected Admin Routes
+    Route::middleware(['admin.auth'])->group(function () {
+        // Dashboard
+        Route::get('/', [App\Http\Controllers\Admin\AdminController::class, 'dashboard'])->name('dashboard');
+
+        // Settings
+        Route::get('settings', [App\Http\Controllers\Admin\AdminController::class, 'showSettings'])->name('settings');
+        Route::post('settings', [App\Http\Controllers\Admin\AdminController::class, 'updateSettings'])->name('settings.update');
+
+        // Sponsored Ads Admin Routes
+        Route::resource('sponsored-ads', SponsoredAdController::class);
+    });
 });
 
 
