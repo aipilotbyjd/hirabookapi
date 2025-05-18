@@ -35,7 +35,7 @@
                             <label for="app_name" class="form-label">Application Name</label>
                             <input type="text" class="form-control @error('app_name') is-invalid @enderror"
                                 id="app_name" name="app_name"
-                                value="{{ old('app_name', Setting::get('app_name', 'Hirabook')) }}">
+                                value="{{ old('app_name', $settings['app_name'] ?? 'Hirabook') }}">
                             @error('app_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -45,7 +45,7 @@
                             <label for="app_version" class="form-label">Application Version</label>
                             <input type="text" class="form-control @error('app_version') is-invalid @enderror"
                                 id="app_version" name="app_version"
-                                value="{{ old('app_version', Setting::get('app_version', '1.0.0')) }}">
+                                value="{{ old('app_version', $settings['app_version'] ?? '1.0.0') }}">
                             @error('app_version')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -55,7 +55,7 @@
                     <div class="mb-3">
                         <label for="app_description" class="form-label">Application Description</label>
                         <textarea class="form-control @error('app_description') is-invalid @enderror" id="app_description"
-                            name="app_description" rows="3">{{ old('app_description', Setting::get('app_description', 'Hirabook is a platform for hira workers')) }}</textarea>
+                            name="app_description" rows="3">{{ old('app_description', $settings['app_description'] ?? 'Hirabook is a platform for hira workers') }}</textarea>
                         @error('app_description')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -66,7 +66,7 @@
                             <label for="app_email" class="form-label">Contact Email</label>
                             <input type="email" class="form-control @error('app_email') is-invalid @enderror"
                                 id="app_email" name="app_email"
-                                value="{{ old('app_email', Setting::get('app_email', 'contact@hirabook.icu')) }}">
+                                value="{{ old('app_email', $settings['app_email'] ?? 'contact@hirabook.icu') }}">
                             @error('app_email')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -76,7 +76,7 @@
                             <label for="app_copyright" class="form-label">Copyright Text</label>
                             <input type="text" class="form-control @error('app_copyright') is-invalid @enderror"
                                 id="app_copyright" name="app_copyright"
-                                value="{{ old('app_copyright', Setting::get('app_copyright', 'Hirabook')) }}">
+                                value="{{ old('app_copyright', $settings['app_copyright'] ?? 'Hirabook') }}">
                             @error('app_copyright')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -87,7 +87,7 @@
                         <label for="app_address" class="form-label">Address</label>
                         <input type="text" class="form-control @error('app_address') is-invalid @enderror"
                             id="app_address" name="app_address"
-                            value="{{ old('app_address', Setting::get('app_address', 'Ahemdabad, Gujarat, India')) }}">
+                            value="{{ old('app_address', $settings['app_address'] ?? 'Ahemdabad, Gujarat, India') }}">
                         @error('app_address')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror

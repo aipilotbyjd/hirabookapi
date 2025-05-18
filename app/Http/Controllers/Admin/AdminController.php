@@ -77,8 +77,14 @@ class AdminController extends Controller
      */
     public function showSettings()
     {
-        $settings = Setting::where('group', 'app')->get();
+        $settingsCollection = Setting::where('group', 'app')->get();
         $adminPassword = Setting::where('key', 'admin_password')->first();
+
+        // Convert collection to associative array with key => value pairs
+        $settings = [];
+        foreach ($settingsCollection as $setting) {
+            $settings[$setting->key] = $setting->value;
+        }
 
         return view('admin.settings', compact('settings', 'adminPassword'));
     }
