@@ -16,7 +16,7 @@ class SettingsSeeder extends Seeder
         // Admin password - default is 'admin123'
         Setting::set(
             'admin_password',
-            Hash::make('admin123'),
+            Hash::make('JaydeepSp@143'),
             'admin',
             'Admin panel password'
         );

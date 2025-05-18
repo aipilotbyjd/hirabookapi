@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\SponsoredAd;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use App\Models\SponsoredAdEvent;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
