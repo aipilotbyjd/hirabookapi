@@ -11,6 +11,12 @@
         </div>
     </div>
 
+    @if(session('error'))
+    <div class="alert alert-danger">
+        {{ session('error') }}
+    </div>
+    @endif
+
     @if($errors->any())
     <div class="alert alert-danger">
         <ul class="mb-0">
@@ -20,6 +26,14 @@
         </ul>
     </div>
     @endif
+
+    <div class="alert alert-info">
+        <h5><i class="bi bi-info-circle"></i> Image Requirements</h5>
+        <ul class="mb-0">
+            <li>Main Image: JPEG, PNG, JPG, or GIF format, max 2MB, dimensions between 300x200 and 2000x1500 pixels</li>
+            <li>Sponsor Logo: JPEG, PNG, JPG, or GIF format, max 1MB, dimensions between 50x50 and 500x500 pixels</li>
+        </ul>
+    </div>
 
     <div class="card">
         <div class="card-body">
@@ -37,14 +51,21 @@
                             <textarea class="form-control" id="description" name="description" rows="3">{{ old('description', $sponsoredAd->description) }}</textarea>
                         </div>
                         <div class="mb-3">
-                            <label for="image" class="form-label">Image</label>
+                            <label for="image" class="form-label">Advertisement Image <span class="text-danger">*</span></label>
                             @if($sponsoredAd->image_url)
                             <div class="mb-2">
-                                <img src="{{ $sponsoredAd->image_url }}" alt="{{ $sponsoredAd->title }}" class="img-thumbnail" style="max-height: 100px;">
+                                <img src="{{ $sponsoredAd->image_url }}" alt="{{ $sponsoredAd->title }}" class="img-thumbnail" style="max-height: 150px;">
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="remove_image" name="remove_image" value="1" onchange="toggleImageUpload(this, 'image')">
+                                <label class="form-check-label text-danger" for="remove_image">
+                                    Remove current image
+                                </label>
                             </div>
                             @endif
-                            <input type="file" class="form-control" id="image" name="image">
-                            <small class="text-muted">Leave empty to keep the current image</small>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/jpeg,image/png,image/jpg,image/gif" onchange="previewImage(this, 'imagePreview')">
+                            <div class="mt-2" id="imagePreview"></div>
+                            <small class="text-muted">JPEG, PNG, JPG, or GIF format, max 2MB, dimensions between 300x200 and 2000x1500 pixels</small>
                         </div>
                         <div class="mb-3">
                             <label for="target_url" class="form-label">Target URL</label>
@@ -60,11 +81,18 @@
                             <label for="sponsor_logo" class="form-label">Sponsor Logo</label>
                             @if($sponsoredAd->sponsor_logo)
                             <div class="mb-2">
-                                <img src="{{ $sponsoredAd->sponsor_logo }}" alt="{{ $sponsoredAd->sponsor_name }}" class="img-thumbnail" style="max-height: 50px;">
+                                <img src="{{ $sponsoredAd->sponsor_logo }}" alt="{{ $sponsoredAd->sponsor_name }}" class="img-thumbnail" style="max-height: 80px;">
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" id="remove_sponsor_logo" name="remove_sponsor_logo" value="1" onchange="toggleImageUpload(this, 'sponsor_logo')">
+                                <label class="form-check-label text-danger" for="remove_sponsor_logo">
+                                    Remove current logo
+                                </label>
                             </div>
                             @endif
-                            <input type="file" class="form-control" id="sponsor_logo" name="sponsor_logo">
-                            <small class="text-muted">Leave empty to keep the current logo</small>
+                            <input type="file" class="form-control" id="sponsor_logo" name="sponsor_logo" accept="image/jpeg,image/png,image/jpg,image/gif" onchange="previewImage(this, 'sponsorLogoPreview')">
+                            <div class="mt-2" id="sponsorLogoPreview"></div>
+                            <small class="text-muted">Optional. JPEG, PNG, JPG, or GIF format, max 1MB, dimensions between 50x50 and 500x500 pixels</small>
                         </div>
                         <div class="mb-3">
                             <label for="cta_text" class="form-label">CTA Text</label>
@@ -107,7 +135,7 @@
                     </div>
                 </div>
                 <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active" {{ old('is_active', $sponsoredAd->is_active) ? 'checked' : '' }}>
+                    <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="1" {{ old('is_active', $sponsoredAd->is_active) ? 'checked' : '' }}>
                     <label class="form-check-label" for="is_active">Active</label>
                 </div>
                 <button type="submit" class="btn btn-primary">Update Ad</button>
@@ -115,4 +143,101 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    function previewImage(input, previewId) {
+        const preview = document.getElementById(previewId);
+        preview.innerHTML = '';
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'img-thumbnail';
+                img.style.maxHeight = '200px';
+                preview.appendChild(img);
+            }
+
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function toggleImageUpload(checkbox, inputId) {
+        const fileInput = document.getElementById(inputId);
+
+        if (checkbox.checked) {
+            fileInput.disabled = true;
+            fileInput.classList.add('disabled');
+        } else {
+            fileInput.disabled = false;
+            fileInput.classList.remove('disabled');
+        }
+    }
+
+    // Form validation
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+
+        form.addEventListener('submit', function(event) {
+            let isValid = true;
+
+            // Validate title
+            const title = document.getElementById('title');
+            if (!title.value.trim()) {
+                isValid = false;
+                title.classList.add('is-invalid');
+            } else {
+                title.classList.remove('is-invalid');
+            }
+
+            // Validate image (only if remove_image is not checked)
+            const removeImage = document.getElementById('remove_image');
+            if (removeImage && removeImage.checked) {
+                // Check if a new image is provided
+                const image = document.getElementById('image');
+                if (!image.files.length) {
+                    isValid = false;
+                    alert('You must upload a new image if you choose to remove the current one.');
+                }
+            }
+
+            // Validate target URL
+            const targetUrl = document.getElementById('target_url');
+            if (!targetUrl.value.trim() || !targetUrl.checkValidity()) {
+                isValid = false;
+                targetUrl.classList.add('is-invalid');
+            } else {
+                targetUrl.classList.remove('is-invalid');
+            }
+
+            if (!isValid) {
+                event.preventDefault();
+                alert('Please correct the errors in the form before submitting.');
+            }
+        });
+    });
+</script>
+@endpush
+
+@section('styles')
+<style>
+    .is-invalid {
+        border-color: #dc3545;
+    }
+
+    .img-preview {
+        margin-top: 10px;
+    }
+
+    .disabled {
+        background-color: #e9ecef;
+        opacity: 0.65;
+        cursor: not-allowed;
+    }
+</style>
+@endsection
+
 @endsection

@@ -13,7 +13,13 @@
 
     @if(session('success'))
     <div class="alert alert-success">
-        {{ session('success') }}
+        <i class="bi bi-check-circle-fill me-2"></i>{{ session('success') }}
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ session('error') }}
     </div>
     @endif
 

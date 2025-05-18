@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Storage;
 
 class SponsoredAd extends Model
 {
@@ -84,6 +85,77 @@ class SponsoredAd extends Model
                 $query->whereNull('ends_at')
                     ->orWhere('ends_at', '>=', now());
             });
+    }
+
+    /**
+     * Delete the ad image from storage.
+     *
+     * @return bool
+     */
+    public function deleteImage(): bool
+    {
+        if ($this->image_url && Storage::disk('public')->exists($this->getImagePath())) {
+            return Storage::disk('public')->delete($this->getImagePath());
+        }
+
+        return false;
+    }
+
+    /**
+     * Delete the sponsor logo from storage.
+     *
+     * @return bool
+     */
+    public function deleteSponsorLogo(): bool
+    {
+        if ($this->sponsor_logo && Storage::disk('public')->exists($this->getSponsorLogoPath())) {
+            return Storage::disk('public')->delete($this->getSponsorLogoPath());
+        }
+
+        return false;
+    }
+
+    /**
+     * Get the path of the image relative to the storage disk.
+     *
+     * @return string|null
+     */
+    public function getImagePath(): ?string
+    {
+        if (!$this->image_url) {
+            return null;
+        }
+
+        // Extract the path from the URL
+        $path = str_replace('/storage/', '', $this->image_url);
+        return $path;
+    }
+
+    /**
+     * Get the path of the sponsor logo relative to the storage disk.
+     *
+     * @return string|null
+     */
+    public function getSponsorLogoPath(): ?string
+    {
+        if (!$this->sponsor_logo) {
+            return null;
+        }
+
+        // Extract the path from the URL
+        $path = str_replace('/storage/', '', $this->sponsor_logo);
+        return $path;
+    }
+
+    /**
+     * Delete all associated files when the model is being deleted.
+     */
+    protected static function booted()
+    {
+        static::deleting(function ($sponsoredAd) {
+            $sponsoredAd->deleteImage();
+            $sponsoredAd->deleteSponsorLogo();
+        });
     }
 
     /**
