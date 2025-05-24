@@ -87,5 +87,9 @@ Route::prefix('v1')->group(function () {
         Route::get('/sponsored-ads', [SponsoredAdController::class, 'index']);
         Route::post('/sponsored-ads/{sponsoredAd}/impression', [SponsoredAdController::class, 'trackImpression']);
         Route::post('/sponsored-ads/{sponsoredAd}/click', [SponsoredAdController::class, 'trackClick']);
+
+        // Search Routes
+        Route::get('/search', 'App\Http\Controllers\Api\SearchController@search');
+        Route::get('/search/all', 'App\Http\Controllers\Api\SearchController@searchAll');
     });
 });
