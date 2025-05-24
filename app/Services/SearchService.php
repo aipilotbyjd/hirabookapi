@@ -4,49 +4,54 @@ namespace App\Services;
 
 use App\Models\Payment;
 use App\Models\Work;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SearchService
 {
+    protected $perPage = 10;
+
     public function searchPayments(array $params)
     {
         try {
-            $query = $params['query'];
-            $page = $params['page'] ?? 1;
-            $filter = $params['filter'] ?? 'all';
-            $sortBy = $params['sortBy'] ?? 'date';
-            $sortDirection = $params['sortDirection'] ?? 'desc';
-            $minAmount = isset($params['minAmount']) ? (float) $params['minAmount'] : null;
-            $maxAmount = isset($params['maxAmount']) ? (float) $params['maxAmount'] : null;
-
-            $paymentsQuery = Payment::query()
+            $query = Payment::query()
                 ->where('user_id', Auth::id())
-                ->where(function (Builder $q) use ($query) {
-                    $q->where('from', 'like', '%' . addcslashes($query, '%_') . '%')
-                        ->orWhere('description', 'like', '%' . addcslashes($query, '%_') . '%');
+                ->where(function ($q) use ($params) {
+                    $searchTerm = addcslashes($params['query'], '%_');
+                    $q->where('description', 'LIKE', "%{$searchTerm}%")
+                      ->orWhere('from', 'LIKE', "%{$searchTerm}%");
                 });
 
-            $paymentsQuery = $this->applyDateFilter($paymentsQuery, $filter);
-            $paymentsQuery = $this->applyAmountFilter($paymentsQuery, $minAmount, $maxAmount);
-            $paymentsQuery = $this->applySorting($paymentsQuery, $sortBy, $sortDirection);
+            // Apply date filter
+            if (!empty($params['filter']) && $params['filter'] !== 'all') {
+                $query = $this->applyDateFilter($query, $params['filter']);
+            }
 
-            return $paymentsQuery->with(['source' => function($q) {
-                $q->select('id', 'name', 'icon');
-            }])->paginate(10, [
-                'id',
-                'from',
-                'description',
-                'amount',
-                'date',
-                'source_id',
-                'created_at',
-                'updated_at'
-            ], 'page', $page);
+            // Apply amount filter
+            if (!empty($params['minAmount']) || !empty($params['maxAmount'])) {
+                $query = $this->applyAmountFilter($query, $params);
+            }
+
+            // Apply sorting
+            $sortBy = $params['sortBy'] ?? 'date';
+            $sortDirection = $params['sortDirection'] ?? 'desc';
+            $query = $this->applySorting($query, $sortBy, $sortDirection);
+
+            // Get paginated results
+            $page = $params['page'] ?? 1;
+            $payments = $query->paginate($this->perPage, ['*'], 'page', $page);
+
+            return [
+                'payments' => $payments->items(),
+                'current_page' => $payments->currentPage(),
+                'last_page' => $payments->lastPage(),
+                'total' => $payments->total(),
+                'per_page' => $payments->perPage()
+            ];
 
         } catch (\Exception $e) {
-            \Log::error('Search payments error: ' . $e->getMessage());
+            Log::error('Error in searchPayments: ' . $e->getMessage());
             throw $e;
         }
     }
@@ -54,105 +59,82 @@ class SearchService
     public function searchAll(string $query)
     {
         try {
+            $searchTerm = addcslashes($query, '%_');
             $userId = Auth::id();
-            $searchQuery = addcslashes($query, '%_');
 
             $payments = Payment::where('user_id', $userId)
-                ->where(function (Builder $q) use ($searchQuery) {
-                    $q->where('from', 'like', "%{$searchQuery}%")
-                        ->orWhere('description', 'like', "%{$searchQuery}%");
+                ->where(function ($q) use ($searchTerm) {
+                    $q->where('description', 'LIKE', "%{$searchTerm}%")
+                      ->orWhere('from', 'LIKE', "%{$searchTerm}%");
                 })
-                ->with(['source' => function($q) {
-                    $q->select('id', 'name', 'icon');
-                }])
-                ->select([
-                    'id',
-                    'from',
-                    'description',
-                    'amount',
-                    'date',
-                    'source_id',
-                    'created_at',
-                    'updated_at'
-                ])
-                ->latest('date')
-                ->take(5)
+                ->latest()
+                ->limit(5)
                 ->get();
 
             $works = Work::where('user_id', $userId)
-                ->where(function (Builder $q) use ($searchQuery) {
-                    $q->where('name', 'like', "%{$searchQuery}%")
-                        ->orWhere('description', 'like', "%{$searchQuery}%");
+                ->where(function ($q) use ($searchTerm) {
+                    $q->where('name', 'LIKE', "%{$searchTerm}%")
+                      ->orWhere('description', 'LIKE', "%{$searchTerm}%");
                 })
-                ->select([
-                    'id',
-                    'name',
-                    'description',
-                    'date',
-                    'created_at',
-                    'updated_at'
-                ])
-                ->latest('date')
-                ->take(5)
+                ->latest()
+                ->limit(5)
                 ->get();
 
             return [
                 'payments' => $payments,
-                'works' => $works,
-                'total_payments' => Payment::where('user_id', $userId)
-                    ->where(function (Builder $q) use ($searchQuery) {
-                        $q->where('from', 'like', "%{$searchQuery}%")
-                            ->orWhere('description', 'like', "%{$searchQuery}%");
-                    })
-                    ->count(),
-                'total_works' => Work::where('user_id', $userId)
-                    ->where(function (Builder $q) use ($searchQuery) {
-                        $q->where('name', 'like', "%{$searchQuery}%")
-                            ->orWhere('description', 'like', "%{$searchQuery}%");
-                    })
-                    ->count(),
+                'works' => $works
             ];
 
         } catch (\Exception $e) {
-            \Log::error('Search all error: ' . $e->getMessage());
+            Log::error('Error in searchAll: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    private function applyDateFilter(Builder $query, string $filter): Builder
+    protected function applyDateFilter($query, $filter)
     {
+        $today = now()->startOfDay();
+
         switch ($filter) {
             case 'today':
-                return $query->whereDate('date', today());
+                return $query->whereDate('date', $today);
             case 'week':
-                return $query->whereBetween('date', [now()->startOfWeek(), now()->endOfWeek()]);
+                return $query->whereBetween('date', [
+                    $today->copy()->startOfWeek(),
+                    $today->copy()->endOfWeek()
+                ]);
             case 'month':
-                return $query->whereBetween('date', [now()->startOfMonth(), now()->endOfMonth()]);
+                return $query->whereBetween('date', [
+                    $today->copy()->startOfMonth(),
+                    $today->copy()->endOfMonth()
+                ]);
             default:
                 return $query;
         }
     }
 
-    private function applyAmountFilter(Builder $query, ?float $minAmount, ?float $maxAmount): Builder
+    protected function applyAmountFilter($query, $params)
     {
-        if ($minAmount !== null && $minAmount >= 0) {
-            $query->where('amount', '>=', $minAmount);
+        if (!empty($params['minAmount'])) {
+            $query->where('amount', '>=', $params['minAmount']);
         }
-        if ($maxAmount !== null && $maxAmount >= 0) {
-            $query->where('amount', '<=', $maxAmount);
+
+        if (!empty($params['maxAmount'])) {
+            $query->where('amount', '<=', $params['maxAmount']);
         }
+
         return $query;
     }
 
-    private function applySorting(Builder $query, string $sortBy, string $sortDirection): Builder
+    protected function applySorting($query, $sortBy, $sortDirection)
     {
-        $validFields = ['date', 'amount', 'from'];
+        $validSortFields = ['date', 'amount', 'from'];
         $validDirections = ['asc', 'desc'];
 
-        if (in_array($sortBy, $validFields) && in_array(strtolower($sortDirection), $validDirections)) {
+        if (in_array($sortBy, $validSortFields) && in_array($sortDirection, $validDirections)) {
             return $query->orderBy($sortBy, $sortDirection);
         }
 
-        return $query->orderBy('date', 'desc'); // Default sorting
+        return $query->orderBy('date', 'desc');
     }
 }

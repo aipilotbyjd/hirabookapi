@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\SearchResource;
 use App\Services\SearchService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class SearchController extends Controller
 {
@@ -18,47 +20,84 @@ class SearchController extends Controller
 
     public function search(Request $request)
     {
-        $request->validate([
-            'query' => 'required|string|min:1',
-            'page' => 'integer|min:1',
-            'filter' => 'string|in:all,today,week,month',
-            'sortBy' => 'string|in:date,amount,from',
-            'sortDirection' => 'string|in:asc,desc',
-            'minAmount' => 'numeric|nullable',
-            'maxAmount' => 'numeric|nullable|gte:minAmount'
-        ]);
+        try {
+            $validated = $request->validate([
+                'query' => 'required|string|min:2',
+                'page' => 'nullable|integer|min:1',
+                'filter' => 'nullable|string|in:all,today,week,month',
+                'sortBy' => 'nullable|string|in:date,amount,from',
+                'sortDirection' => 'nullable|string|in:asc,desc',
+                'minAmount' => 'nullable|numeric|min:0',
+                'maxAmount' => 'nullable|numeric|gt:minAmount'
+            ]);
 
-        $payments = $this->searchService->searchPayments($request->all());
+            $results = $this->searchService->searchPayments($validated);
+            $payments = SearchResource::collection($results['payments']);
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'payments' => SearchResource::collection($payments->items()),
-                'current_page' => $payments->currentPage(),
-                'last_page' => $payments->lastPage(),
-                'total' => $payments->total(),
-                'per_page' => $payments->perPage(),
-            ]
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Search results retrieved successfully',
+                'data' => [
+                    'payments' => $payments,
+                    'pagination' => [
+                        'current_page' => $results['current_page'],
+                        'last_page' => $results['last_page'],
+                        'total' => $results['total'],
+                        'per_page' => $results['per_page'],
+                        'has_more_pages' => $results['current_page'] < $results['last_page']
+                    ]
+                ]
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Search error: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while searching',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function searchAll(Request $request)
     {
-        $request->validate([
-            'query' => 'required|string|min:1',
-            'page' => 'integer|min:1'
-        ]);
+        try {
+            $validated = $request->validate([
+                'query' => 'required|string|min:2'
+            ]);
 
-        $results = $this->searchService->searchAll($request->input('query'));
+            $results = $this->searchService->searchAll($validated['query']);
 
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'payments' => SearchResource::collection($results['payments']),
-                'works' => $results['works'],
-                'total_payments' => $results['total_payments'],
-                'total_works' => $results['total_works'],
-            ]
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Global search results retrieved successfully',
+                'data' => [
+                    'payments' => SearchResource::collection($results['payments']),
+                    'works' => SearchResource::collection($results['works']),
+                    'counts' => [
+                        'total_payments' => count($results['payments']),
+                        'total_works' => count($results['works'])
+                    ]
+                ]
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Global search error: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'An error occurred while performing global search',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

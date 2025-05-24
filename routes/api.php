@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\v1\WorkController;
 use App\Http\Controllers\Api\v1\WorkItemController;
 use App\Http\Controllers\Api\v1\PaymentController;
 use App\Http\Controllers\Api\v1\PdfController;
+use App\Http\Controllers\Api\SearchController;
 
 //v1 api routes
 Route::prefix('v1')->group(function () {
@@ -89,7 +90,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/sponsored-ads/{sponsoredAd}/click', [SponsoredAdController::class, 'trackClick']);
 
         // Search Routes
-        Route::get('/search', 'App\Http\Controllers\Api\SearchController@search');
-        Route::get('/search/all', 'App\Http\Controllers\Api\SearchController@searchAll');
+        Route::get('/search', [SearchController::class, 'search']);
+        Route::get('/search/all', [SearchController::class, 'searchAll']);
     });
 });
