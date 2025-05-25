@@ -22,7 +22,7 @@ class SearchController extends Controller
     {
         try {
             $validated = $request->validate([
-                'query' => 'required|string|min:2',
+                'query' => 'required|string|min:1',
                 'page' => 'nullable|integer|min:1',
                 'filter' => 'nullable|string|in:all,today,week,month',
                 'sortBy' => 'nullable|string|in:date,amount,from',
@@ -68,7 +68,7 @@ class SearchController extends Controller
     {
         try {
             $validated = $request->validate([
-                'query' => 'required|string|min:2'
+                'query' => 'required|string|min:1'
             ]);
 
             $results = $this->searchService->searchAll($validated['query']);
