@@ -90,7 +90,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/sponsored-ads/{sponsoredAd}/click', [SponsoredAdController::class, 'trackClick']);
 
         // Search Routes
-        Route::get('/search', [SearchController::class, 'search']);
-        Route::get('/search/all', [SearchController::class, 'searchAll']);
+        Route::get('/search', [SearchController::class, 'search'])->name('search');
+        Route::get('/search/all', [SearchController::class, 'searchAll'])->name('search.all');
     });
 });
