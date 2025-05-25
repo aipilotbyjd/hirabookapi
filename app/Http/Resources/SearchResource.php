@@ -13,14 +13,14 @@ class SearchResource extends JsonResource
             'from' => $this->from,
             'description' => $this->description,
             'amount' => $this->amount,
-            'date' => $this->date->format('Y-m-d'),
+            'date' => is_string($this->date) ? $this->date : $this->date->format('Y-m-d'),
             'source' => $this->when($this->source, [
                 'id' => $this->source->id,
                 'name' => $this->source->name,
                 'icon' => $this->source->icon,
             ]),
-            'created_at' => $this->created_at->format('Y-m-d H:i:s'),
-            'updated_at' => $this->updated_at->format('Y-m-d H:i:s'),
+            'created_at' => is_string($this->created_at) ? $this->created_at : $this->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => is_string($this->updated_at) ? $this->updated_at : $this->updated_at->format('Y-m-d H:i:s'),
         ];
     }
 }

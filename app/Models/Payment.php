@@ -10,6 +10,7 @@ class Payment extends Model
 {
     use SoftDeletes;
     protected $fillable = ['name', 'amount', 'category', 'description', 'source_id', 'date', 'is_active', 'user_id', 'from'];
+    protected $dates = ['date', 'created_at', 'updated_at', 'deleted_at'];
 
     public function user()
     {
