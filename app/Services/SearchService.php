@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class SearchService
 {
-    protected $perPage = 10;
+    protected $perPage = 5;
 
     public function searchPayments(array $params)
     {
