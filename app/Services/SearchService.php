@@ -19,7 +19,7 @@ class SearchService
                 ->where(function ($q) use ($params) {
                     $searchTerm = addcslashes($params['query'], '%_');
                     $q->where('description', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('from', 'LIKE', "%{$searchTerm}%");
+                        ->orWhere('from', 'LIKE', "%{$searchTerm}%");
                 });
 
             // Apply date filter
@@ -48,42 +48,53 @@ class SearchService
                 'total' => $payments->total(),
                 'per_page' => $payments->perPage()
             ];
-
         } catch (\Exception $e) {
             Log::error('Error in searchPayments: ' . $e->getMessage());
             throw $e;
         }
     }
 
-    public function searchAll(string $query)
+    /**
+     * Global search for payments and works with pagination
+     * @param array $params ['query' => string, 'page' => int]
+     */
+    public function searchAll(array $params)
     {
         try {
-            $searchTerm = addcslashes($query, '%_');
+            $searchTerm = addcslashes($params['query'], '%_');
             $userId = Auth::id();
+            $page = $params['page'] ?? 1;
 
-            $payments = Payment::where('user_id', $userId)
+            // Paginate payments
+            $paymentsQuery = Payment::where('user_id', $userId)
                 ->where(function ($q) use ($searchTerm) {
                     $q->where('description', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('from', 'LIKE', "%{$searchTerm}%");
+                        ->orWhere('from', 'LIKE', "%{$searchTerm}%");
                 })
-                ->latest()
-                ->limit(5)
-                ->get();
+                ->latest();
+            $payments = $paymentsQuery->paginate($this->perPage, ['*'], 'page', $page);
 
-            $works = Work::where('user_id', $userId)
+            // Paginate works
+            $worksQuery = Work::where('user_id', $userId)
                 ->where(function ($q) use ($searchTerm) {
                     $q->where('name', 'LIKE', "%{$searchTerm}%")
-                      ->orWhere('description', 'LIKE', "%{$searchTerm}%");
+                        ->orWhere('description', 'LIKE', "%{$searchTerm}%");
                 })
-                ->latest()
-                ->limit(5)
-                ->get();
+                ->latest();
+            $works = $worksQuery->paginate($this->perPage, ['*'], 'page', $page);
 
             return [
-                'payments' => $payments,
-                'works' => $works
+                'payments' => $payments->items(),
+                'works' => $works->items(),
+                'pagination' => [
+                    'current_page' => $payments->currentPage(),
+                    'last_page' => max($payments->lastPage(), $works->lastPage()),
+                    'total_payments' => $payments->total(),
+                    'total_works' => $works->total(),
+                    'per_page' => $this->perPage,
+                    'has_more_pages' => ($payments->currentPage() < $payments->lastPage()) || ($works->currentPage() < $works->lastPage())
+                ]
             ];
-
         } catch (\Exception $e) {
             Log::error('Error in searchAll: ' . $e->getMessage());
             throw $e;

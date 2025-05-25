@@ -68,10 +68,14 @@ class SearchController extends Controller
     {
         try {
             $validated = $request->validate([
-                'query' => 'required|string|min:1'
+                'query' => 'required|string|min:1',
+                'page' => 'nullable|integer|min:1'
             ]);
 
-            $results = $this->searchService->searchAll($validated['query']);
+            $results = $this->searchService->searchAll([
+                'query' => $validated['query'],
+                'page' => $validated['page'] ?? 1
+            ]);
 
             return response()->json([
                 'status' => 'success',
@@ -79,10 +83,7 @@ class SearchController extends Controller
                 'data' => [
                     'payments' => SearchResource::collection($results['payments']),
                     'works' => SearchResource::collection($results['works']),
-                    'counts' => [
-                        'total_payments' => count($results['payments']),
-                        'total_works' => count($results['works'])
-                    ]
+                    'pagination' => $results['pagination']
                 ]
             ]);
         } catch (ValidationException $e) {
