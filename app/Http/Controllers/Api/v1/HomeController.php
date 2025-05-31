@@ -290,7 +290,10 @@ class HomeController extends BaseController
             }
 
             if (!$reportType) { // Merged data
-                $data = $works->concat($payments)->sortByDesc('created_at')->values();
+                $data = [
+                    'works' => $works,
+                    'payments' => $payments,
+                ];
             }
 
 
