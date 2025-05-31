@@ -236,6 +236,7 @@ class HomeController extends BaseController
             $endDate = $request->input('end_date');
             $reportType = $request->input('report_type'); // 'work', 'payment', or null for merged
             $jobType = $request->input('job_type'); // filter for work items
+            $searchTerm = $request->input(key: 'search'); // New search term parameter
 
             $responseData = [];
             $workSummary = null;
@@ -257,6 +258,17 @@ class HomeController extends BaseController
                             $q->where('type', $jobType);
                         });
                     })
+                    ->when($searchTerm, function ($query) use ($searchTerm) {
+                        return $query->where(function ($q) use ($searchTerm) {
+                            $q->where('name', 'like', '%' . $searchTerm . '%')
+                                ->orWhere('total', 'like', '%' . $searchTerm . '%')
+                                ->orWhereHas('workItems', function ($wiQuery) use ($searchTerm) {
+                                    $wiQuery->where('type', 'like', '%' . $searchTerm . '%')
+                                        ->orWhere('diamond', 'like', '%' . $searchTerm . '%')
+                                        ->orWhere('price', 'like', '%' . $searchTerm . '%');
+                                });
+                        });
+                    })
                     ->with('workItems');
 
                 $works = $workQuery->get();
@@ -274,6 +286,19 @@ class HomeController extends BaseController
                     })
                     ->when($endDate, function ($query) use ($endDate) {
                         return $query->whereDate('created_at', '<=', $endDate);
+                    })
+                    ->when($searchTerm, function ($query) use ($searchTerm) {
+                        return $query->where(function ($q) use ($searchTerm) {
+                            $q->where('from', 'like', '%' . $searchTerm . '%')
+                                ->orWhere('amount', 'like', '%' . $searchTerm . '%')
+                                ->orWhere('description', 'like', '%' . $searchTerm . '%')
+                                ->orWhereHas('payment_sources', function ($wQuery) use ($searchTerm) {
+                                    $wQuery->where('name', 'like', '%' . $searchTerm . '%')
+                                        ->orWhere('name_en', 'like', '%' . $searchTerm . '%')
+                                        ->orWhere('name_gu', 'like', '%' . $searchTerm . '%')
+                                        ->orWhere('name_hi', 'like', '%' . $searchTerm . '%');
+                                });
+                        });
                     });
 
                 $payments = $paymentQuery->get();
