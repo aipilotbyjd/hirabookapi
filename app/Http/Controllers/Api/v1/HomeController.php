@@ -295,7 +295,7 @@ class HomeController extends BaseController
 
 
             return $this->sendResponse([
-                'data' => $data,
+                'records' => $data,
                 'summary' => [
                     'work' => $workSummary,
                     'payment' => $paymentSummary,
