@@ -92,5 +92,8 @@ Route::prefix('v1')->group(function () {
         // Search Routes
         Route::get('/search', [SearchController::class, 'search'])->name('search');
         Route::get('/search/all', [SearchController::class, 'searchAll'])->name('search.all');
+
+        //Get Work And Payment Reports
+        Route::get('reports', [HomeController::class, 'generateReport'])->name('reports.generate');
     });
 });

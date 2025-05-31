@@ -8,6 +8,8 @@ use App\Models\Notification;
 use App\Models\Payment;
 use App\Models\Work;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
+
 class HomeController extends BaseController
 {
     public function settings()
@@ -224,6 +226,85 @@ class HomeController extends BaseController
         } catch (\Exception $e) {
             logError('HomeController', 'getRecentStatus', $e->getMessage());
             return $this->sendError('Error fetching recent status', [], 500);
+        }
+    }
+
+    public function generateReport(Request $request)
+    {
+        try {
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
+            $reportType = $request->input('report_type'); // work, payment, or null for merged
+            $jobType = $request->input('job_type'); // filter for work items
+
+            $workQuery = Work::where('user_id', Auth::id());
+            $paymentQuery = Payment::where('user_id', Auth::id());
+
+            if ($startDate) {
+                $workQuery->whereDate('created_at', '>=', $startDate);
+                $paymentQuery->whereDate('created_at', '>=', $startDate);
+            }
+
+            if ($endDate) {
+                $workQuery->whereDate('created_at', '<=', $endDate);
+                $paymentQuery->whereDate('created_at', '<=', $endDate);
+            }
+
+            if ($jobType && ($reportType === 'work' || !$reportType)) {
+                $workQuery->whereHas('workItems', function ($query) use ($jobType) {
+                    $query->where('type', $jobType);
+                });
+            }
+
+            $works = collect();
+            $payments = collect();
+
+            if ($reportType === 'work' || !$reportType) {
+                $works = $workQuery->with('workItems')->get();
+            }
+
+            if ($reportType === 'payment' || !$reportType) {
+                $payments = $paymentQuery->get();
+            }
+
+            $data = [];
+            $workSummary = [
+                'total_records' => 0,
+                'total_amount' => 0,
+            ];
+            $paymentSummary = [
+                'total_records' => 0,
+                'total_amount' => 0,
+            ];
+
+            if ($reportType === 'work' || !$reportType) {
+                $data['works'] = $works;
+                $workSummary['total_records'] = $works->count();
+                $workSummary['total_amount'] = $works->sum('total');
+            }
+
+            if ($reportType === 'payment' || !$reportType) {
+                $data['payments'] = $payments;
+                $paymentSummary['total_records'] = $payments->count();
+                $paymentSummary['total_amount'] = $payments->sum('amount');
+            }
+
+            if (!$reportType) { // Merged data
+                $data = $works->concat($payments)->sortByDesc('created_at')->values();
+            }
+
+
+            return $this->sendResponse([
+                'data' => $data,
+                'summary' => [
+                    'work' => $workSummary,
+                    'payment' => $paymentSummary,
+                ]
+            ], 'Report generated successfully');
+
+        } catch (\Exception $e) {
+            logError('HomeController', 'generateReport', $e->getMessage());
+            return $this->sendError('Error generating report', [], 500);
         }
     }
 }
