@@ -234,75 +234,67 @@ class HomeController extends BaseController
         try {
             $startDate = $request->input('start_date');
             $endDate = $request->input('end_date');
-            $reportType = $request->input('report_type'); // work, payment, or null for merged
+            $reportType = $request->input('report_type'); // 'work', 'payment', or null for merged
             $jobType = $request->input('job_type'); // filter for work items
 
-            $workQuery = Work::where('user_id', Auth::id());
-            $paymentQuery = Payment::where('user_id', Auth::id());
+            $responseData = [];
+            $workSummary = null;
+            $paymentSummary = null;
 
-            if ($startDate) {
-                $workQuery->whereDate('created_at', '>=', $startDate);
-                $paymentQuery->whereDate('created_at', '>=', $startDate);
-            }
+            $shouldFetchWorks = !$reportType || $reportType === 'work';
+            $shouldFetchPayments = !$reportType || $reportType === 'payment';
 
-            if ($endDate) {
-                $workQuery->whereDate('created_at', '<=', $endDate);
-                $paymentQuery->whereDate('created_at', '<=', $endDate);
-            }
+            if ($shouldFetchWorks) {
+                $workQuery = Work::where('user_id', Auth::id())
+                    ->when($startDate, function ($query) use ($startDate) {
+                        return $query->whereDate('created_at', '>=', $startDate);
+                    })
+                    ->when($endDate, function ($query) use ($endDate) {
+                        return $query->whereDate('created_at', '<=', $endDate);
+                    })
+                    ->when($jobType, function ($query) use ($jobType) {
+                        return $query->whereHas('workItems', function ($q) use ($jobType) {
+                            $q->where('type', $jobType);
+                        });
+                    })
+                    ->with('workItems');
 
-            if ($jobType && ($reportType === 'work' || !$reportType)) {
-                $workQuery->whereHas('workItems', function ($query) use ($jobType) {
-                    $query->where('type', $jobType);
-                });
-            }
-
-            $works = collect();
-            $payments = collect();
-
-            if ($reportType === 'work' || !$reportType) {
-                $works = $workQuery->with('workItems')->get();
-            }
-
-            if ($reportType === 'payment' || !$reportType) {
-                $payments = $paymentQuery->get();
-            }
-
-            $data = [];
-            $workSummary = [
-                'total_records' => 0,
-                'total_amount' => 0,
-            ];
-            $paymentSummary = [
-                'total_records' => 0,
-                'total_amount' => 0,
-            ];
-
-            if ($reportType === 'work' || !$reportType) {
-                $data['works'] = $works;
-                $workSummary['total_records'] = $works->count();
-                $workSummary['total_amount'] = $works->sum('total');
-            }
-
-            if ($reportType === 'payment' || !$reportType) {
-                $data['payments'] = $payments;
-                $paymentSummary['total_records'] = $payments->count();
-                $paymentSummary['total_amount'] = $payments->sum('amount');
-            }
-
-            if (!$reportType) { // Merged data
-                $data = [
-                    'works' => $works,
-                    'payments' => $payments,
+                $works = $workQuery->get();
+                $responseData['works'] = $works;
+                $workSummary = [
+                    'total_records' => $works->count(),
+                    'total_amount' => $works->sum('total'),
                 ];
             }
 
+            if ($shouldFetchPayments) {
+                $paymentQuery = Payment::where('user_id', Auth::id())
+                    ->when($startDate, function ($query) use ($startDate) {
+                        return $query->whereDate('created_at', '>=', $startDate);
+                    })
+                    ->when($endDate, function ($query) use ($endDate) {
+                        return $query->whereDate('created_at', '<=', $endDate);
+                    });
+
+                $payments = $paymentQuery->get();
+                $responseData['payments'] = $payments;
+                $paymentSummary = [
+                    'total_records' => $payments->count(),
+                    'total_amount' => $payments->sum('amount'),
+                ];
+            }
+
+            $finalSummary = [];
+            if ($workSummary) {
+                $finalSummary['work'] = $workSummary;
+            }
+            if ($paymentSummary) {
+                $finalSummary['payment'] = $paymentSummary;
+            }
 
             return $this->sendResponse([
-                'records' => $data,
-                'summary' => [
-                    'work' => $workSummary,
-                    'payment' => $paymentSummary,
-                ]
+                'records' => $responseData,
+                'summary' => $finalSummary,
             ], 'Report generated successfully');
 
         } catch (\Exception $e) {
